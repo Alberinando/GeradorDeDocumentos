@@ -151,7 +151,7 @@ export function PasswordGenerator() {
                     <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="length" className="text-xs sm:text-sm">
-                                Tamanho (10-64)
+                                Tamanho <span className="text-muted-foreground">(10-64)</span>
                             </Label>
                             <Input
                                 id="length"
@@ -177,7 +177,7 @@ export function PasswordGenerator() {
 
                         <div className="space-y-2">
                             <Label htmlFor="quantity" className="text-xs sm:text-sm">
-                                Quantidade (1-50)
+                                Quantidade <span className="text-muted-foreground">(1-50)</span>
                             </Label>
                             <Input
                                 id="quantity"
