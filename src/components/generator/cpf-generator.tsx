@@ -38,12 +38,14 @@ export function CpfGenerator() {
     }
 
     const handleCopy = async () => {
-        await navigator.clipboard.writeText(cpf)
+        const ok = await copy(cpf);
         toast({
-            title: "Copiado!",
-            description: "CPF copiado para a área de transferência",
-        })
-    }
+            title: ok ? "Copiado!" : "Não foi possível copiar",
+            description: ok
+                ? "CPF copiado para a área de transferência"
+                : "Seu navegador bloqueou o acesso à área de transferência."
+        });
+    };
 
     return (
         <Card>

@@ -4,10 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Copy, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import {Checkbox} from "@/components/ui/checkbox";
 import {useCopyToClipboard} from "@/hooks/use-copy-to-clipboard";
 
 interface PasswordOptions {
@@ -27,14 +27,14 @@ export function PasswordGenerator() {
         numbers: true,
         special: true,
     })
-    const { toast } = useToast()
+    const { toast } = useToast();
+    const { copy } = useCopyToClipboard();
 
     const generatePassword = (len: number, opts: PasswordOptions): string => {
         const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         const lowercase = "abcdefghijklmnopqrstuvwxyz"
         const numbers = "0123456789"
-        const special = "!@#$%&*()-+.,;?[]^><:"
-        const { copy } = useCopyToClipboard();
+        const special = "!@#$%&*()-+.,;?[]^><:Çç|''´´``"
 
         let chars = ""
         if (opts.uppercase) chars += uppercase
@@ -53,12 +53,28 @@ export function PasswordGenerator() {
         return password
     }
 
+    const validateLength = (value: number) => {
+        if (value < 10) return 10
+        if (value > 64) return 64
+        return value
+    }
+
+    const validateQuantity = (value: number) => {
+        if (value < 1) return 1
+        if (value > 50) return 50
+        return value
+    }
+
     const handleGenerate = () => {
-        // Limitar tamanho entre 10 e 64
-        const validLength = Math.max(10, Math.min(64, length))
+        const validLength = validateLength(length)
+        const validQuantity = validateQuantity(quantity)
+
+        // Update state with validated values
+        setLength(validLength)
+        setQuantity(validQuantity)
 
         const newPasswords: string[] = []
-        for (let i = 0; i < quantity; i++) {
+        for (let i = 0; i < validQuantity; i++) {
             const password = generatePassword(validLength, options)
             if (password) newPasswords.push(password)
         }
@@ -67,18 +83,22 @@ export function PasswordGenerator() {
     }
 
     const handleCopy = async (password: string) => {
-        await navigator.clipboard.writeText(password)
+        const ok = await copy(password)
         toast({
-            title: "Copiado!",
-            description: "Senha copiada para a área de transferência",
+            title: ok ? "Copiado!" : "Não foi possível copiar",
+            description: ok
+                ? "Senha copiada para a área de transferência"
+                : "Seu navegador bloqueou o acesso à área de transferência."
         })
     }
 
     const handleCopyAll = async () => {
-        await navigator.clipboard.writeText(passwords.join("\n"))
+        const ok = await copy(passwords.join("\n"))
         toast({
-            title: "Copiado!",
-            description: "Todas as senhas copiadas para a área de transferência",
+            title: ok ? "Copiado!" : "Não foi possível copiar",
+            description: ok
+                ? "Todas as senhas copiadas para a área de transferência"
+                : "Seu navegador bloqueou o acesso à área de transferência."
         })
     }
 
@@ -156,29 +176,37 @@ export function PasswordGenerator() {
                             <Input
                                 id="length"
                                 type="number"
-                                min="10"
-                                max="64"
                                 value={length}
                                 onChange={(e) => {
+                                    const val = Number.parseInt(e.target.value)
+                                    if (!isNaN(val)) {
+                                        setLength(val)
+                                    }
+                                }}
+                                onBlur={(e) => {
                                     const val = Number.parseInt(e.target.value) || 10
-                                    setLength(Math.max(10, Math.min(64, val)))
+                                    setLength(validateLength(val))
                                 }}
                                 className="font-mono text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="quantity" className="text-xs sm:text-sm">
-                                Quantidade
+                                Quantidade (1-50)
                             </Label>
                             <Input
                                 id="quantity"
                                 type="number"
-                                min="1"
-                                max="50"
                                 value={quantity}
                                 onChange={(e) => {
+                                    const val = Number.parseInt(e.target.value)
+                                    if (!isNaN(val)) {
+                                        setQuantity(val)
+                                    }
+                                }}
+                                onBlur={(e) => {
                                     const val = Number.parseInt(e.target.value) || 1
-                                    setQuantity(Math.max(1, Math.min(50, val)))
+                                    setQuantity(validateQuantity(val))
                                 }}
                                 className="font-mono text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />

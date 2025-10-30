@@ -23,12 +23,14 @@ export function RgGenerator() {
     }
 
     const handleCopy = async () => {
-        await navigator.clipboard.writeText(rg)
+        const ok = await copy(rg);
         toast({
-            title: "Copiado!",
-            description: "RG copiado para a área de transferência",
-        })
-    }
+            title: ok ? "Copiado!" : "Não foi possível copiar",
+            description: ok
+                ? "RG copiado para a área de transferência"
+                : "Seu navegador bloqueou o acesso à área de transferência."
+        });
+    };
 
     return (
         <Card>
