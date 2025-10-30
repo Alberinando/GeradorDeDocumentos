@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Copy, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import {useCopyToClipboard} from "@/hooks/use-copy-to-clipboard";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 interface PasswordOptions {
     uppercase: boolean
@@ -19,22 +19,31 @@ interface PasswordOptions {
 
 export function PasswordGenerator() {
     const [passwords, setPasswords] = useState<string[]>([])
-    const [length, setLength] = useState(16)
-    const [quantity, setQuantity] = useState(1)
+    const [length, setLength] = useState<string>("16");
+    const [quantity, setQuantity] = useState<string>("1");
     const [options, setOptions] = useState<PasswordOptions>({
         uppercase: true,
         lowercase: true,
         numbers: true,
         special: true,
     })
-    const { toast } = useToast();
-    const { copy } = useCopyToClipboard();
+    const { toast } = useToast()
+    const { copy } = useCopyToClipboard()
+
+    const blockNonNumeric: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+        if (["e", "E", "+", "-", ".", ","].includes(e.key)) {
+            e.preventDefault()
+        }
+    }
+
+    const clampLength = (v: number) => (v < 10 ? 10 : v > 64 ? 64 : v);
+    const clampQuantity = (v: number) => (v < 1 ? 1 : v > 50 ? 50 : v);
 
     const generatePassword = (len: number, opts: PasswordOptions): string => {
         const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         const lowercase = "abcdefghijklmnopqrstuvwxyz"
         const numbers = "0123456789"
-        const special = "!@#$%&*()-+.,;?[]^><:Çç|''´´``"
+        const special = "!@#$%&*()-+.,;?[]^><:Çç|\"'`´"
 
         let chars = ""
         if (opts.uppercase) chars += uppercase
@@ -42,9 +51,7 @@ export function PasswordGenerator() {
         if (opts.numbers) chars += numbers
         if (opts.special) chars += special
 
-        if (chars === "") {
-            chars = lowercase + numbers
-        }
+        if (chars === "") chars = lowercase + numbers
 
         let password = ""
         for (let i = 0; i < len; i++) {
@@ -53,34 +60,17 @@ export function PasswordGenerator() {
         return password
     }
 
-    const validateLength = (value: number) => {
-        if (value < 10) return 10
-        if (value > 64) return 64
-        return value
-    }
-
-    const validateQuantity = (value: number) => {
-        if (value < 1) return 1
-        if (value > 50) return 50
-        return value
-    }
-
     const handleGenerate = () => {
-        const validLength = validateLength(length)
-        const validQuantity = validateQuantity(quantity)
+        const len = clampLength(parseInt(length || "0", 10) || 10);
+        const qty = clampQuantity(parseInt(quantity || "0", 10) || 1);
 
-        // Update state with validated values
-        setLength(validLength)
-        setQuantity(validQuantity)
+        setLength(String(len));
+        setQuantity(String(qty));
 
-        const newPasswords: string[] = []
-        for (let i = 0; i < validQuantity; i++) {
-            const password = generatePassword(validLength, options)
-            if (password) newPasswords.push(password)
-        }
-
-        setPasswords(newPasswords)
-    }
+        const next: string[] = [];
+        for (let i = 0; i < qty; i++) next.push(generatePassword(len, options));
+        setPasswords(next);
+    };
 
     const handleCopy = async (password: string) => {
         const ok = await copy(password)
@@ -88,7 +78,7 @@ export function PasswordGenerator() {
             title: ok ? "Copiado!" : "Não foi possível copiar",
             description: ok
                 ? "Senha copiada para a área de transferência"
-                : "Seu navegador bloqueou o acesso à área de transferência."
+                : "Seu navegador bloqueou o acesso à área de transferência.",
         })
     }
 
@@ -98,7 +88,7 @@ export function PasswordGenerator() {
             title: ok ? "Copiado!" : "Não foi possível copiar",
             description: ok
                 ? "Todas as senhas copiadas para a área de transferência"
-                : "Seu navegador bloqueou o acesso à área de transferência."
+                : "Seu navegador bloqueou o acesso à área de transferência.",
         })
     }
 
@@ -106,7 +96,9 @@ export function PasswordGenerator() {
         <Card>
             <CardHeader>
                 <CardTitle className="text-lg sm:text-xl md:text-2xl">Gerador de Senhas</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Gere senhas seguras com opções personalizadas</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">
+                    Gere senhas seguras com opções personalizadas
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6">
                 <div className="space-y-4">
@@ -119,10 +111,7 @@ export function PasswordGenerator() {
                                     checked={options.uppercase}
                                     onCheckedChange={(checked) => setOptions({ ...options, uppercase: checked as boolean })}
                                 />
-                                <label
-                                    htmlFor="uppercase"
-                                    className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                >
+                                <label htmlFor="uppercase" className="text-xs sm:text-sm font-medium cursor-pointer">
                                     Incluir Letras Maiúsculas (A-Z)
                                 </label>
                             </div>
@@ -132,10 +121,7 @@ export function PasswordGenerator() {
                                     checked={options.lowercase}
                                     onCheckedChange={(checked) => setOptions({ ...options, lowercase: checked as boolean })}
                                 />
-                                <label
-                                    htmlFor="lowercase"
-                                    className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                >
+                                <label htmlFor="lowercase" className="text-xs sm:text-sm font-medium cursor-pointer">
                                     Incluir Letras Minúsculas (a-z)
                                 </label>
                             </div>
@@ -145,10 +131,7 @@ export function PasswordGenerator() {
                                     checked={options.numbers}
                                     onCheckedChange={(checked) => setOptions({ ...options, numbers: checked as boolean })}
                                 />
-                                <label
-                                    htmlFor="numbers"
-                                    className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                >
+                                <label htmlFor="numbers" className="text-xs sm:text-sm font-medium cursor-pointer">
                                     Incluir Números (0-9)
                                 </label>
                             </div>
@@ -158,10 +141,7 @@ export function PasswordGenerator() {
                                     checked={options.special}
                                     onCheckedChange={(checked) => setOptions({ ...options, special: checked as boolean })}
                                 />
-                                <label
-                                    htmlFor="special"
-                                    className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                >
+                                <label htmlFor="special" className="text-xs sm:text-sm font-medium cursor-pointer">
                                     Incluir Caracteres Especiais (!@#$%&amp;*()-+.,;?[]^&gt;&lt;:)
                                 </label>
                             </div>
@@ -176,20 +156,25 @@ export function PasswordGenerator() {
                             <Input
                                 id="length"
                                 type="number"
+                                inputMode="numeric"
+                                min={10}
+                                max={64}
+                                step={1}
                                 value={length}
+                                onKeyDown={blockNonNumeric}
                                 onChange={(e) => {
-                                    const val = Number.parseInt(e.target.value)
-                                    if (!isNaN(val)) {
-                                        setLength(val)
-                                    }
+                                    const v = e.target.value;
+                                    if (v === "") setLength(""); else setLength(v);
                                 }}
-                                onBlur={(e) => {
-                                    const val = Number.parseInt(e.target.value) || 10
-                                    setLength(validateLength(val))
+                                onBlur={() => {
+                                    const n = parseInt(length || "0", 10);
+                                    const normalized = clampLength(Number.isFinite(n) ? n : 10);
+                                    setLength(String(normalized));
                                 }}
                                 className="font-mono text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                         </div>
+
                         <div className="space-y-2">
                             <Label htmlFor="quantity" className="text-xs sm:text-sm">
                                 Quantidade (1-50)
@@ -197,16 +182,20 @@ export function PasswordGenerator() {
                             <Input
                                 id="quantity"
                                 type="number"
+                                inputMode="numeric"
+                                min={1}
+                                max={50}
+                                step={1}
                                 value={quantity}
+                                onKeyDown={blockNonNumeric}
                                 onChange={(e) => {
-                                    const val = Number.parseInt(e.target.value)
-                                    if (!isNaN(val)) {
-                                        setQuantity(val)
-                                    }
+                                    const v = e.target.value;
+                                    if (v === "") setQuantity(""); else setQuantity(v);
                                 }}
-                                onBlur={(e) => {
-                                    const val = Number.parseInt(e.target.value) || 1
-                                    setQuantity(validateQuantity(val))
+                                onBlur={() => {
+                                    const n = parseInt(quantity || "0", 10);
+                                    const normalized = clampQuantity(Number.isFinite(n) ? n : 1);
+                                    setQuantity(String(normalized));
                                 }}
                                 className="font-mono text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
@@ -216,7 +205,7 @@ export function PasswordGenerator() {
 
                 <Button onClick={handleGenerate} className="w-full cursor-pointer text-xs sm:text-sm" size="default">
                     <RefreshCw className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    Gerar Senha{quantity > 1 ? "s" : ""}
+                    Gerar Senha{Number(quantity) > 1 ? "s" : ""}
                 </Button>
 
                 {passwords.length > 0 && (
@@ -226,26 +215,18 @@ export function PasswordGenerator() {
                                 Senha{passwords.length > 1 ? "s" : ""} Gerada{passwords.length > 1 ? "s" : ""}
                             </Label>
                             {passwords.length > 1 && (
-                                <Button
-                                    onClick={handleCopyAll}
-                                    variant="outline"
-                                    size="sm"
-                                    className="cursor-pointer bg-transparent text-xs shrink-0"
-                                >
+                                <Button onClick={handleCopyAll} variant="outline" size="sm" className="cursor-pointer bg-transparent text-xs shrink-0">
                                     <Copy className="mr-1.5 h-3 w-3" />
                                     <span className="hidden xs:inline">Copiar Todas</span>
                                     <span className="xs:hidden">Todas</span>
                                 </Button>
                             )}
                         </div>
+
                         <div className="space-y-2 max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-1 sm:pr-2">
                             {passwords.map((password, index) => (
                                 <div key={index} className="flex gap-2">
-                                    <Input
-                                        value={password}
-                                        readOnly
-                                        className="font-mono text-xs sm:text-sm pointer-events-none select-none"
-                                    />
+                                    <Input value={password} readOnly className="font-mono text-xs sm:text-sm pointer-events-none select-none" />
                                     <Button
                                         onClick={() => handleCopy(password)}
                                         variant="outline"

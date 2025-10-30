@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Gerador de Documentos",
-  description: "Gere CPF, CNPJ e RG",
+  description: "Gere CPF, CNPJ, RG e senha de forma aleatório",
 };
 
 export default function RootLayout({
